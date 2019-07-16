@@ -3,10 +3,10 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Main Script
+   :caption: Counties Leaderboard
 
 
-Spreadsheet
+Counties Leaderboard
 ===========
 .. automodule:: CountiesLeaderboard
     :members:
