@@ -12,7 +12,6 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath("C:/Users/danje/OneDrive - Loughborough University/Python Projects/Counties RL New/venv/"))
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../venv/"))
 
