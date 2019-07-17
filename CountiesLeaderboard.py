@@ -2,7 +2,7 @@ import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup, SoupStrainer
-from typing import List, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, cast
 from Sheets import Sheets
 from Spreadsheet import Spreadsheet
 
@@ -10,7 +10,7 @@ from Spreadsheet import Spreadsheet
 Player_T = List[Union[str, int]]
 
 
-#Keys are the counties to be combined, values are new counties
+# Keys are the counties to be combined, values are new counties
 COMBINE_COUNTIES = {
         "Tyne and Wear": "Northumberland",
         "Clwyd": "North Wales",
@@ -62,7 +62,7 @@ def main() -> None:
 
 
 def generate_town_links(all_data: List[List[str]], *args: int) -> List[List[Tuple[str, List[str]]]]:
-    """
+    """Parse  trn spreadsheet data to get pure town leaderboard links attached to county names
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def generate_town_links(all_data: List[List[str]], *args: int) -> List[List[Tupl
 
 
 def get_country_leaderboards(all_town_links: List[List[Tuple[str, List[str]]]]) -> List[Dict[str, List[Player_T]]]:
-    """
+    """Collects all county leaderboards for each county, also combines counties
 
     Parameters
     ----------
@@ -99,29 +99,32 @@ def get_country_leaderboards(all_town_links: List[List[Tuple[str, List[str]]]]) 
     -------
     all_country_leaderboards
         List of leaderboards containing dictionaries of each county with a list of players
-
     """
 
     all_country_leaderboards = []
     for country in all_town_links:
+        # Starts collecting players up to 10 counties at a time
         with ThreadPoolExecutor(max_workers=10) as executor:
             country_players = dict(executor.map(get_county_players, country))
         all_country_leaderboards.append(country_players)
+
     for country_leaderboard in all_country_leaderboards:
-        for country in COMBINE_COUNTIES:
-            if country in country_leaderboard:
-                if COMBINE_COUNTIES[country] in country_leaderboard:
-                    country_leaderboard[COMBINE_COUNTIES[country]] += country_leaderboard[country]
+        # Combines counties together. Remove original county after being combined.
+        for county in COMBINE_COUNTIES:
+            if county in country_leaderboard:
+                if COMBINE_COUNTIES[county] in country_leaderboard:
+                    country_leaderboard[COMBINE_COUNTIES[county]] += country_leaderboard[county]
                 else:
-                    country_leaderboard[COMBINE_COUNTIES[country]] = country_leaderboard[country]
-                del country_leaderboard[country]
+                    country_leaderboard[COMBINE_COUNTIES[county]] = country_leaderboard[county]
+                del country_leaderboard[county]
+        # Sort all counties by player's mmr, descending order.
         for county in country_leaderboard:
             country_leaderboard[county].sort(key=lambda x: x[2], reverse=True)
     return all_country_leaderboards
 
 
 def get_county_players(county: Tuple[str, List[str]]) -> Tuple[str, List[Player_T]]:
-    """
+    """For an individual county, collect all players from each town.
 
     Parameters
     ----------
@@ -134,6 +137,10 @@ def get_county_players(county: Tuple[str, List[str]]) -> Tuple[str, List[Player_
         A tuple of the county name along with a list of players from that county.
     """
 
+    # Collect players from town links, visiting up to 10 town leaderboards at once
+    # Yes this is nested multi-threading (didn't know it was possible)
+    # In theory up to 100 town links can be visited.
+    # Due to data format reasons I think around 60 gets visited at once max
     with ThreadPoolExecutor(max_workers=10) as executor:
         town_leaderboards = list(executor.map(get_town_players, county[1]))
         players = [player for town in town_leaderboards for player in town]
@@ -141,7 +148,7 @@ def get_county_players(county: Tuple[str, List[str]]) -> Tuple[str, List[Player_
 
 
 def get_town_players(town: str) -> List[Player_T]:
-    """
+    """From a town, collect all players from the leaderboard.
 
     Parameters
     ----------
@@ -169,6 +176,7 @@ def get_town_players(town: str) -> List[Player_T]:
                     mmr = int(player.contents[5].contents[1].text.splitlines()[2].replace(",", ""))
                     town_players.append([name, link, mmr])
                 except IndexError:
+                    # Only occurs when an advert is in the leaderboard, so skips to next player
                     continue
         except Exception as ex:
             logging.exception(ex)
@@ -182,7 +190,7 @@ def get_town_players(town: str) -> List[Player_T]:
 def write_country_leaderboards(spreadsheet: Spreadsheet,
                                all_leaderboards: List[Dict[str, List[Player_T]]],
                                *args: str) -> None:
-    """
+    """Writes leaderboard to spreadsheet, preserving format, and resizing columns to fit new data.
 
     Parameters
     ----------
@@ -195,7 +203,7 @@ def write_country_leaderboards(spreadsheet: Spreadsheet,
     """
 
     def rowcol_to_a1(row: int, col: int) -> str:
-        """
+        """Converts row col cell format into the A1 Google Sheets cell format.
 
         Parameters
         ----------
@@ -229,6 +237,8 @@ def write_country_leaderboards(spreadsheet: Spreadsheet,
     for i in range(len(args)):
         sheet_name = args[i]
         start_col = 1
+        # Creates value range objects. Including formatting hyperlinks to player profiles.
+        # Each county is 3 columns wide.
         for counties in sorted(all_leaderboards[i]):
             value_range = {}
             data = [["Rank", counties, "3's MMR"]]
@@ -241,6 +251,11 @@ def write_country_leaderboards(spreadsheet: Spreadsheet,
             value_range["values"] = data
             all_value_ranges.append(value_range)
             start_col += 4
+
+    # Casts args which is Tuple[str, ...] to expected List[str]
+    # No runtime cost, just for ide type checking system
+    args = cast(List[str], args)
+
     spreadsheet.clear_ranges_values(args)
     spreadsheet.update_ranges_values(all_value_ranges)
     spreadsheet.autosize_all_columns()
