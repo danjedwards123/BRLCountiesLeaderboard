@@ -155,10 +155,16 @@ def get_player_mmrs(player: Tuple[str, str]) -> Tuple[str, str, int]:
                     standard_mmr_rank_join = list(filter(lambda x: x[0] > 0, standard_mmr_rank_join))
                     max_mmr = max(standard_mmr_rank_join, key=lambda x: x[1])[1]
                     player_details = (player[0], player[1], max_mmr)
+        except ValueError:
+            player_details = None
+            try_count = 0
+        except TypeError:
+            player_details = None
+            try_count = 0
         except Exception as ex:
             logging.exception(ex)
             try_count -= 1
-            player = None
+            player_details = None
         else:
             try_count = 0
     return player_details
