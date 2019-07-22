@@ -74,7 +74,8 @@ class Sheets:
                 logging.exception(ex)
         return service
 
-    def spreadsheet_get_ranges_values(self, spreadsheet_id: str, ranges: List[str], value_render_option: str) -> Dict:
+    def get_ranges_values(self, spreadsheet_id: str, ranges: List[str], value_render_option: str,
+                          major_dimension: str) -> Dict:
         """Gets the cell data stored at each range in the ranges list
 
         Parameters
@@ -96,12 +97,13 @@ class Sheets:
         request: Any = self._service.spreadsheets().values().batchGet(
             spreadsheetId=spreadsheet_id,
             ranges=ranges,
-            valueRenderOption=value_render_option
+            valueRenderOption=value_render_option,
+            majorDimension=major_dimension
         )
         return request.execute()
 
-    def spreadsheet_update_ranges_values(self, spreadsheet_id: str, value_ranges: Value_Range_T,
-                                         value_input_option: str) -> Dict:
+    def update_ranges_values(self, spreadsheet_id: str, value_ranges: Value_Range_T,
+                             value_input_option: str) -> Dict:
         """Updates cell data within multiple range.
 
         .. warning::
@@ -132,7 +134,7 @@ class Sheets:
         )
         return request.execute()
 
-    def spreadsheet_get_worksheet_data(self, spreadsheet_id: str) -> Dict:
+    def get_worksheet_data(self, spreadsheet_id: str) -> Dict:
         """Retrieves all data about the spreadsheet with the given id.
 
         Parameters
@@ -152,7 +154,7 @@ class Sheets:
         )
         return request.execute()
 
-    def spreadsheet_autosize_worksheets(self, spreadsheet_id: str, worksheet_ids: List[str], dimension: str) -> Dict:
+    def autosize_worksheets(self, spreadsheet_id: str, worksheet_ids: List[str], dimension: str) -> Dict:
         """Autosizes each worksheet in worksheet_ids by specified dimension.
 
         Parameters
@@ -187,7 +189,7 @@ class Sheets:
         )
         return request.execute()
 
-    def spreadsheet_clear_worksheet_values(self, spreadsheet_id: str, ranges: List[str]) -> Dict:
+    def clear_worksheet_values(self, spreadsheet_id: str, ranges: List[str]) -> Dict:
         """Clears all cell data from each range, preserving formatting
 
         Parameters

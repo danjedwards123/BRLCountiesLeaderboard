@@ -66,7 +66,8 @@ class Spreadsheet:
         self._sheet_service: Sheets = sheet_service
 
     @sheet_service_function
-    def get_ranges_values(self, ranges: List[str], value_render_option: str = "FORMATTED_VALUE") -> Optional[Dict]:
+    def get_ranges_values(self, ranges: List[str], value_render_option: str = "FORMATTED_VALUE",
+                          major_dimension: str = "ROWS") -> Optional[Dict]:
         """Gets data of all cells within all given ranges, in the render option provided.
 
         Parameters
@@ -82,7 +83,7 @@ class Spreadsheet:
             The result of executing the sheet service batchGet api call.
         """
 
-        return self._sheet_service.spreadsheet_get_ranges_values(self._sheet_id, ranges, value_render_option)
+        return self._sheet_service.get_ranges_values(self._sheet_id, ranges, value_render_option, major_dimension)
 
     @sheet_service_function
     def clear_ranges_values(self, ranges: List[str]) -> Optional[Dict]:
@@ -99,7 +100,7 @@ class Spreadsheet:
             The result of executing the sheet service batchClear api call.
         """
 
-        return self._sheet_service.spreadsheet_clear_worksheet_values(self._sheet_id, ranges)
+        return self._sheet_service.clear_worksheet_values(self._sheet_id, ranges)
 
     @sheet_service_function
     def update_ranges_values(self, value_ranges: Value_Range_T,
@@ -123,7 +124,7 @@ class Spreadsheet:
             The result of executing the sheet service batchUpdate api call.
         """
 
-        return self._sheet_service.spreadsheet_update_ranges_values(self._sheet_id, value_ranges, value_input_option)
+        return self._sheet_service.update_ranges_values(self._sheet_id, value_ranges, value_input_option)
 
     @sheet_service_function
     def autosize_all_columns(self) -> Optional[Dict]:
@@ -137,7 +138,7 @@ class Spreadsheet:
 
         all_worksheet_ids: List[str] = [str(worksheet["properties"]["sheetId"])
                                         for worksheet in self.get_worksheet_data()["sheets"]]
-        return self._sheet_service.spreadsheet_autosize_worksheets(self._sheet_id, all_worksheet_ids, "COLUMNS")
+        return self._sheet_service.autosize_worksheets(self._sheet_id, all_worksheet_ids, "COLUMNS")
 
     @sheet_service_function
     def get_worksheet_data(self) -> Optional[Dict]:
@@ -149,4 +150,4 @@ class Spreadsheet:
             The result of executing the sheet service get api call.
         """
 
-        return self._sheet_service.spreadsheet_get_worksheet_data(self._sheet_id)
+        return self._sheet_service.get_worksheet_data(self._sheet_id)
