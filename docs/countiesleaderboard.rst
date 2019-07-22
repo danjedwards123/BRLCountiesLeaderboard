@@ -1,14 +1,14 @@
-.. _sheets:
+.. _countiesleaderboard:
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Sheets
+   :caption: Counties Leaderboard
 
 
-Sheets
-======
-.. automodule:: Sheets
+Counties Leaderboard
+====================
+.. automodule:: CountiesLeaderboard
     :members:
 
 

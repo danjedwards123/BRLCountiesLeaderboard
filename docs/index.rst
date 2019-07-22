@@ -10,7 +10,8 @@ Welcome to BRL Counties Leaderboard's documentation!
 Contents
 ========
 
-* :ref:`main`
+* :ref:`countiesleaderboard`
+* :ref:`countiesleaderboardpeak`
 * :ref:`spreadsheet`
 * :ref:`sheets`
 
